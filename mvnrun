@@ -1,0 +1,95 @@
+#! /bin/bash
+
+: ${output:="/dev/null"}
+
+
+
+if [ -n "$MAVEN_HOME" ]; then
+    PATH="$MAVEN_HOME/bin:$PATH"
+fi
+
+if [ $# -eq 0 ]; then
+    echo "mvnrun artifact [args]"
+    echo "       calculate a classpath for an artifact and either print it or run java with it"
+    echo "       artifact (required) in group:id[:version] notation, default version is LATEST"
+    echo '       args -> run java -cp $cp ${@:2}, otherwise print the classpath'
+    echo "       eg:"
+    echo "           mvnrun org.db4j:kilim kilim.examples.SimpleTask"
+    exit
+fi    
+
+
+IFS=: read org art ver < <(echo "$1")
+
+fake="
+<project>
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>x</groupId>
+  <artifactId>x</artifactId>
+  <version>0</version>
+  <dependencies>
+    <dependency>
+      <groupId>$org</groupId>
+      <artifactId>$art</artifactId>
+      <version>${ver:-LATEST}</version>
+    </dependency>
+  </dependencies>
+</project>
+"
+
+
+cp=-
+read cp < <(
+    mvn dependency:resolve dependency:build-classpath -f <(echo "$fake") -Dmdep.outputFile=/dev/fd/3 3>&1 > $output
+)
+
+if [ "$cp" == - ]; then
+   echo "mvn failed to resolve ... exiting"
+   exit 1;
+fi
+
+
+if [ $# -gt 1 ]; then
+    java -cp "$cp" ${@:2}
+else
+    echo "$cp"
+fi
+
+exit $?
+
+
+# alternatives: use mvn directly
+#   exec:java (output is dirty)
+#   exec:exec, but that means handling a bunch of variables and paths
+#
+# mvn -f <(echo "$fake") exec:java -Dexec.mainClass="$2" > /dev/null
+
+
+
+# or
+# could accept a path and generate the classpath semi-manually
+# cp=$(ls $1/*.jar):$(mvn -f $1/*.pom dependency:build-classpath -Dmdep.outputFile=/dev/fd/3 3>&1 > /dev/null)
+#
+# pom=~/.m2/repository/org/db4j/kilim-streams-meta/0.1/*.pom
+# mvn dependency:get -Dartifact=org.db4j:kilim-streams-meta:0.1:pom
+# java -cp $(mvn -f $pom dependency:resolve dependency:build-classpath -Dmdep.outputFile=/dev/fd/3 3>&1 > /dev/null)
+# kilim.tools.Kilim stream2.Example 
+
+
+
+# or
+# use dependencies (copy, copy-dep, unpack) to fill a directory with the deps
+# coords=org.db4j:kilim-streams:0.1
+# m2=$(echo $coords | while IFS=: read a b c; do echo ~/.m2/repository/"${a//.//}/${b//.//}/$c"; done)
+# mvn dependency:resolve -f $m2/*.pom
+##  eg: m2=~/.m2/repository/org/db4j/kilim-streams/0.1
+# mvn dependency:unpack -Dartifact=$coords -DoutputDirectory=libs
+#
+# then the user can call java -cp libs/\* org.foo.blah
+
+
+
+
+
+

@@ -1,0 +1,24 @@
+{
+  "name": "mvnrun",
+  "version": "1.0.0",
+  "description": "run a java class from maven central or the local M2 cache",
+  "main": "mvnrun",
+  "bin": {
+    "mvnrun": "./mvnrun"
+  },
+  "author": {
+    "name": "nqzero",
+    "email": "srl.source@nqzero.com",
+    "url": "http://db4j.org"
+  },
+  "scripts": {
+    "test": "exit 0"
+  },
+  "keywords": [
+    "mvnrun",
+    "maven",
+    "java"
+  ],
+  "author": "nqzero",
+  "license": "MIT"
+}
