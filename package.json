@@ -1,6 +1,6 @@
 {
   "name": "mvnrun",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "run a java class from maven central or the local M2 cache",
   "main": "mvnrun",
   "bin": {
@@ -19,6 +19,12 @@
     "maven",
     "java"
   ],
-  "author": "nqzero",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nqzero/mvnrun.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nqzero/mvnrun/issues"
+  },
   "license": "MIT"
 }
